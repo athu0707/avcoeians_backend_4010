@@ -8,7 +8,7 @@ const Event = require('./models/Event');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 
-const app = express(); // ✅ Define app here first!
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ✅ Middleware
@@ -90,11 +90,12 @@ app.post('/api/events', async (req, res) => {
 app.post('/api/events/:eventId/image', upload.single('image'), async (req, res) => {
   const { eventId } = req.params;
 
-  if (!req.file?.path) {
-    return res.status(400).json({ error: "Image not uploaded." });
+  if (!req.file) {
+    return res.status(400).json({ error: "No image uploaded." });
   }
 
   try {
+    // ✅ Cloudinary URL available via req.file.path
     const updatedEvent = await Event.findByIdAndUpdate(
       eventId,
       { image: req.file.path },

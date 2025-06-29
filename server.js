@@ -1,7 +1,3 @@
-
-app.get('/', (req, res) => {
-  res.send('✅ Backend is live. Use /api/events');
-});
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -12,17 +8,21 @@ const Event = require('./models/Event');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 
-const app = express();
-const PORT = 3000;
+const app = express(); // ✅ Define app here first!
+const PORT = process.env.PORT || 3000;
 
 // ✅ Middleware
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
+// ✅ Root route
+app.get('/', (req, res) => {
+  res.send('✅ Backend is live. Use /api/events');
+});
+
 // ✅ MongoDB Connection
 mongoose.connect('mongodb+srv://admin:O9yrU2MDSyvCTf3w@event.dxdozoj.mongodb.net/events?retryWrites=true&w=majority&appName=event')
-
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
@@ -43,18 +43,16 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// ✅ Create new event + send email, return ID
+// ✅ Create new event + send email
 app.post('/api/events', async (req, res) => {
   const { name, date, description, to } = req.body;
 
   try {
-    // Save event
     const newEvent = new Event({ name, date, description });
     await newEvent.save();
 
     console.log("🆕 Event created with ID:", newEvent._id.toString());
 
-    // Send Email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -65,16 +63,17 @@ app.post('/api/events', async (req, res) => {
 
     const mailOptions = {
       from: 'atharvmulay007@gmail.com',
-      to: 'madhavijoshi2021@gmail.com', // 👈 recipient email from frontend
+      to: 'madhavijoshi2021@gmail.com',
       subject: `📢 New Event: ${name}`,
       text: `📅 Date: ${date}\n📝 Description: ${description}`
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("📧 Email sent to:",'madhavijoshi2021@gmail.com');
+    console.log("📧 Email sent to:", 'madhavijoshi2021@gmail.com');
+
     await Event.findByIdAndUpdate(newEvent._id, {
-  emailReminderSent: true
-});
+      emailReminderSent: true
+    });
 
     res.status(200).json({
       message: '✅ Event saved and email sent successfully!',
@@ -87,7 +86,7 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-// ✅ Upload image for existing event by ID
+// ✅ Upload image for existing event
 app.post('/api/events/:eventId/image', upload.single('image'), async (req, res) => {
   const { eventId } = req.params;
 

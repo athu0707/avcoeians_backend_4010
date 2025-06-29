@@ -63,13 +63,13 @@ app.post('/api/events', async (req, res) => {
 
     const mailOptions = {
       from: 'atharvmulay007@gmail.com',
-      to: 'madhavijoshi2021@gmail.com',
+      to: to, // ✅ Now dynamic email address
       subject: `📢 New Event: ${name}`,
       text: `📅 Date: ${date}\n📝 Description: ${description}`
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("📧 Email sent to:", 'madhavijoshi2021@gmail.com');
+    console.log("📧 Email sent to:", to);
 
     await Event.findByIdAndUpdate(newEvent._id, {
       emailReminderSent: true
@@ -95,7 +95,6 @@ app.post('/api/events/:eventId/image', upload.single('image'), async (req, res) 
   }
 
   try {
-    // ✅ Cloudinary URL available via req.file.path
     const updatedEvent = await Event.findByIdAndUpdate(
       eventId,
       { image: req.file.path },

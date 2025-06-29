@@ -1,3 +1,7 @@
+
+app.get('/', (req, res) => {
+  res.send('✅ Backend is live. Use /api/events');
+});
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -17,7 +21,8 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 // ✅ MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/events')
+mongoose.connect('mongodb+srv://admin:O9yrU2MDSyvCTf3w@event.dxdozoj.mongodb.net/events?retryWrites=true&w=majority&appName=event')
+
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 

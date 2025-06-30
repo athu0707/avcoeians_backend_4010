@@ -4,36 +4,36 @@ const cors = require('cors');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const Event = require('./models/Event');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
+const Event = require('./models/Event');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 
-// ✅ Root route
+// Root test route
 app.get('/', (req, res) => {
   res.send('✅ Backend is live. Use /api/events');
 });
 
-// ✅ MongoDB Connection
+// MongoDB connection
 mongoose.connect('mongodb+srv://admin:O9yrU2MDSyvCTf3w@event.dxdozoj.mongodb.net/events?retryWrites=true&w=majority&appName=event')
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// ✅ Cloudinary Config
+// Cloudinary configuration
 cloudinary.config({
   cloud_name: 'degmpyvch',
   api_key: '551986489357477',
   api_secret: 'ONz3AqAOpU3vN733p4Zb228qfX8'
 });
 
-// ✅ Multer + Cloudinary Storage
+// Multer + Cloudinary storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -43,37 +43,39 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// ✅ Create new event + send email
+// ✅ POST: Create Event + Send Email
 app.post('/api/events', async (req, res) => {
   const { name, date, description, to } = req.body;
 
   try {
     const newEvent = new Event({ name, date, description });
     await newEvent.save();
-
     console.log("🆕 Event created with ID:", newEvent._id.toString());
 
+    // Email setup
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'atharvmulay007@gmail.com',
-        pass: 'bwxqyuszswopadcf'
-      }
+        pass: 'kqxzaszqhybrnzxy' // ✅ Use your actual Gmail App Password here
+      },
+      secure: true,
+      logger: true,
+      debug: true
     });
 
     const mailOptions = {
       from: 'atharvmulay007@gmail.com',
-      to: to, // ✅ Now dynamic email address
+      to: to,
       subject: `📢 New Event: ${name}`,
       text: `📅 Date: ${date}\n📝 Description: ${description}`
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log("📧 Email sent to:", to);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("📧 Email sent:", info.response);
 
-    await Event.findByIdAndUpdate(newEvent._id, {
-      emailReminderSent: true
-    });
+    // Update event
+    await Event.findByIdAndUpdate(newEvent._id, { emailReminderSent: true });
 
     res.status(200).json({
       message: '✅ Event saved and email sent successfully!',
@@ -86,7 +88,7 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-// ✅ Upload image for existing event
+// ✅ POST: Upload event image
 app.post('/api/events/:eventId/image', upload.single('image'), async (req, res) => {
   const { eventId } = req.params;
 
@@ -115,7 +117,7 @@ app.post('/api/events/:eventId/image', upload.single('image'), async (req, res) 
   }
 });
 
-// ✅ Get all events
+// ✅ GET: All events
 app.get('/api/events', async (req, res) => {
   try {
     const events = await Event.find().sort({ date: -1 });
@@ -126,7 +128,7 @@ app.get('/api/events', async (req, res) => {
   }
 });
 
-// ✅ Start server
+// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
